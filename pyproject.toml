@@ -142,7 +142,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-videogenbook = ["data/*.json", "configs/*.yaml", "templates/*.ipynb"]
+videogenbook = ["py.typed"]
 
 [tool.black]
 line-length = 88

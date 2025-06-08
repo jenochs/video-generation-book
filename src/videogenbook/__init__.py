@@ -2,8 +2,7 @@
 videogenbook - Companion package for 'Hands-On Video Generation with AI'
 
 This package provides utilities, examples, and simplified interfaces for working with
-2025's breakthrough video generation models including Google Veo 3, Kling AI 2.0,
-Runway Gen-4, HunyuanVideo, and OpenSora 2.0.
+2025's breakthrough video generation models including LTX-Video, HunyuanVideo, and OpenSora 2.0.
 """
 
 __version__ = "0.1.0"

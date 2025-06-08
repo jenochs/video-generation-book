@@ -58,13 +58,13 @@ MODEL_REGISTRY = {
         precision_options=["bf16", "fp16", "fp32"]
     ),
 
-    "tencent/HunyuanVideo": ModelConfig(
+    "hunyuanvideo-community/HunyuanVideo": ModelConfig(
         name="HunyuanVideo",
-        model_id="tencent/HunyuanVideo", 
+        model_id="hunyuanvideo-community/HunyuanVideo", 
         architecture="Diffusion Transformer (13B)",
         max_resolution=720,
         max_duration=15.0,
-        supports_audio=True,
+        supports_audio=False,  # Community version may not support audio
         requires_login=False,
         min_vram_gb=40,  # Realistic requirement for full model
         recommended_vram_gb=80,  # Ideal for high quality
@@ -85,9 +85,9 @@ MODEL_REGISTRY = {
     ),
 
     # Colab-optimized configurations
-    "tencent/HunyuanVideo-Colab": ModelConfig(
+    "hunyuanvideo-community/HunyuanVideo-Colab": ModelConfig(
         name="HunyuanVideo-Colab",
-        model_id="tencent/HunyuanVideo",
+        model_id="hunyuanvideo-community/HunyuanVideo",
         architecture="Diffusion Transformer (13B) - Colab Optimized",
         max_resolution=544,  # Reduced for A100 40GB
         max_duration=10.0,   # Reduced for memory
@@ -450,7 +450,7 @@ def get_colab_optimized_config(model_name: str, gpu_memory_gb: float = 40) -> Di
         Dictionary with optimized generation parameters
     """
     base_configs = {
-        "tencent/HunyuanVideo": {
+        "hunyuanvideo-community/HunyuanVideo": {
             "high_quality": {
                 "height": 720, "width": 1280, "num_frames": 65,
                 "guidance_scale": 7.0, "num_inference_steps": 30,
