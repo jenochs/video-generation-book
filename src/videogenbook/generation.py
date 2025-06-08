@@ -267,11 +267,14 @@ def save_video_output(
             # Tensor format
             frames = video_frames
         
-        # Convert to numpy if needed
-        if torch.is_tensor(frames):
+        # Convert PIL Images to numpy arrays if needed
+        if hasattr(frames[0], 'convert'):  # PIL Images
+            frames = [np.array(frame.convert('RGB')) for frame in frames]
+            frames = np.array(frames)
+        elif torch.is_tensor(frames):
             frames = frames.cpu().numpy()
         
-        # Normalize to 0-255 range
+        # Normalize to 0-255 range if needed
         if frames.max() <= 1.0:
             frames = (frames * 255).astype(np.uint8)
         
