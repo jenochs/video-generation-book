@@ -47,7 +47,7 @@ keywords = [
     "opensora"
 ]
 dependencies = [
-    "torch>=2.7.1",
+    "torch",
     "torchvision",
     "torchaudio", 
     "diffusers>=0.33.1",
