@@ -227,11 +227,11 @@ def models():
                 "Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
             ],
             "🌟 Open Source Leaders": [
-                "tencent/HunyuanVideo",
+                "hunyuanvideo-community/HunyuanVideo",
                 "hpcai-tech/Open-Sora-v2"
             ],
             "🚀 Colab Optimized": [
-                "tencent/HunyuanVideo-Colab"
+                "hunyuanvideo-community/HunyuanVideo-Colab"
             ],
             "⏳ API-Only Models (No HuggingFace)": [
                 "Google Veo 3 (API)",
@@ -300,14 +300,14 @@ def colab_setup():
                 click.echo("✅ A100 GPU detected - optimal for HunyuanVideo!")
                 
                 # Show recommended configuration
-                config = get_colab_optimized_config("tencent/HunyuanVideo", gpu_info['memory_free'])
+                config = get_colab_optimized_config("hunyuanvideo-community/HunyuanVideo", gpu_info['memory_free'])
                 click.echo(f"\n🎬 Recommended HunyuanVideo settings:")
                 click.echo(f"   Resolution: {config['width']}x{config['height']}")
                 click.echo(f"   Frames: {config['num_frames']}")
                 click.echo(f"   Steps: {config['num_inference_steps']}")
                 
                 click.echo(f"\n💡 Quick start command:")
-                click.echo(f"   videogenbook generate 'tencent/HunyuanVideo-Colab' --prompt 'your prompt'")
+                click.echo(f"   videogenbook generate 'hunyuanvideo-community/HunyuanVideo-Colab' --prompt 'your prompt'")
             else:
                 click.echo("⚠️  For best results, upgrade to Colab Pro+ for A100 access")
         else:
