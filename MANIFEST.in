@@ -1,0 +1,42 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+include environment.yml
+include pyproject.toml
+
+# Documentation
+recursive-include docs *
+recursive-include notebooks *.ipynb
+recursive-include notebooks *.md
+
+# Source code
+recursive-include src/videogenbook *
+
+# Configuration files
+include src/videogenbook/configs/*.yaml
+include src/videogenbook/data/*.json
+include src/videogenbook/templates/*.ipynb
+
+# Exclude development files
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude setup.cfg
+exclude tox.ini
+
+# Exclude cache and build artifacts
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude *.egg-info
+
+# Exclude large files
+global-exclude *.mp4
+global-exclude *.avi
+global-exclude *.mov
+global-exclude *.bin
+global-exclude *.safetensors
+global-exclude *.pt
+global-exclude *.pth
+global-exclude *.ckpt

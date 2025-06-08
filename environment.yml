@@ -1,0 +1,48 @@
+name: videogenbook
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11
+  - pip
+  - git
+  
+  # Core ML libraries
+  - pytorch>=2.0.0
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1  # For CUDA 12.1 systems
+  
+  # Scientific computing
+  - numpy>=1.21.0
+  - scipy
+  - pillow>=9.0.0
+  - opencv
+  - imageio
+  - matplotlib
+  - pandas
+  
+  # Jupyter and development
+  - jupyter
+  - jupyterlab
+  - ipywidgets
+  
+  # Optional dependencies (conda-installable)
+  - ffmpeg  # For video processing
+  
+  # Pip dependencies
+  - pip:
+    - diffusers>=0.33.1
+    - transformers>=4.52.4
+    - accelerate
+    - safetensors
+    - huggingface-hub
+    - imageio-ffmpeg
+    - click
+    - rich
+    - tqdm
+    - requests
+    - -e .  # Install videogenbook package in development mode

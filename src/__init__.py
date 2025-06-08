@@ -1,0 +1,1 @@
+# Hands-On Video Generation with AI - Core Library
