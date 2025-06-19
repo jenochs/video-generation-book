@@ -14,7 +14,12 @@ from .models import (
     load_model,
     list_available_models,
     get_model_info,
+    check_model_compatibility,
     ModelConfig,
+    install_opensora,
+    download_opensora_models,
+    setup_opensora_environment,
+    check_opensora_installation,
 )
 
 from .utils import (
@@ -55,7 +60,14 @@ __all__ = [
     "load_model",
     "list_available_models", 
     "get_model_info",
+    "check_model_compatibility",
     "ModelConfig",
+    
+    # OpenSora 2.0 setup
+    "install_opensora",
+    "download_opensora_models", 
+    "setup_opensora_environment",
+    "check_opensora_installation",
     
     # Utilities
     "get_device",
@@ -124,10 +136,16 @@ def generate(prompt: str, model: str = "Lightricks/LTX-Video", output_path: str 
         
     Example:
         >>> import videogenbook
-        >>> videogenbook.generate("a cat walking in a garden")
-        'video.mp4'
+        >>> video_path = videogenbook.generate("a cat walking in a garden")
+        >>> print(f"Video saved to: {video_path}")
     """
+    import os
     from .generation import generate_video, VideoGenerationConfig
+    
+    print(f"🚀 Starting video generation...")
+    print(f"   🎬 Prompt: {prompt}")
+    print(f"   🤖 Model: {model}")
+    print(f"   📁 Output: {os.path.abspath(output_path)}")
     
     # Enhanced prompt for better quality
     enhanced_prompt = f"high quality, detailed, cinematic, {prompt}, well lit, clear focus"
@@ -146,6 +164,14 @@ def generate(prompt: str, model: str = "Lightricks/LTX-Video", output_path: str 
     result = generate_video(config)
     
     if result['success']:
-        return output_path
+        abs_path = result['output_path']
+        print(f"\n🎉 Generation completed successfully!")
+        print(f"   📁 Video location: {abs_path}")
+        print(f"   📊 File size: {result['file_size_mb']:.1f} MB")
+        print(f"   ⏱️  Generation time: {result['generation_time']:.1f} seconds")
+        return abs_path
     else:
-        raise RuntimeError(f"Video generation failed: {result.get('error', 'Unknown error')}")
+        error_msg = f"Video generation failed: {result.get('error', 'Unknown error')}"
+        print(f"❌ {error_msg}")
+        raise RuntimeError(error_msg)
+        
