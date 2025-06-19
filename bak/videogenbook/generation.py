@@ -86,20 +86,14 @@ def generate_video(
         # Generate video with improved settings
         with torch.inference_mode():
             if "ltx" in config.model_name.lower():
-                # LTX-Video specific generation with optimal parameters
-                # Use bfloat16 if available for better performance
-                print(f"🎬 Generating {num_frames} frames at {config.resolution}x{config.resolution}")
-                
+                # LTX-Video specific generation with better defaults
                 result = model(
-                    prompt=config.prompt,
-                    width=config.resolution,
+                    prompt=config.prompt, 
+                    num_frames=num_frames, 
                     height=config.resolution, 
-                    num_frames=num_frames,
-                    num_inference_steps=config.num_inference_steps,
+                    width=config.resolution,
                     guidance_scale=config.guidance_scale,
-                    # LTX-Video specific optimizations
-                    num_videos_per_prompt=1,
-                    generator=torch.Generator().manual_seed(config.seed) if config.seed else None
+                    num_inference_steps=config.num_inference_steps
                 )
                 video_frames = result.frames[0]
             elif "wan" in config.model_name.lower():
@@ -113,28 +107,6 @@ def generate_video(
                     num_inference_steps=config.num_inference_steps
                 )
                 video_frames = result.frames[0]
-            elif "opensora" in config.model_name.lower():
-                # OpenSora v2 specific generation (isolated environment)
-                result = model(
-                    prompt=config.prompt,
-                    num_frames=num_frames,
-                    height=config.resolution,
-                    width=config.resolution,
-                    guidance_scale=config.guidance_scale,
-                    num_inference_steps=config.num_inference_steps
-                )
-                # OpenSora returns file path instead of frames
-                if hasattr(result, 'video_path'):
-                    # Handle file-based output
-                    import shutil
-                    import os
-                    final_output = config.output_path
-                    shutil.copy2(result.video_path, final_output)
-                    
-                    # Create a dummy frames object for compatibility
-                    video_frames = {"video_file": final_output, "frames_count": num_frames}
-                else:
-                    video_frames = result.frames[0] if hasattr(result, 'frames') else result
             else:
                 # Generic generation
                 result = model(**generation_kwargs)
@@ -143,37 +115,8 @@ def generate_video(
         if progress_callback:
             progress_callback(8, 10)
         
-        # Handle different output types
-        if isinstance(video_frames, dict) and "video_file" in video_frames:
-            # OpenSora file-based output - already saved
-            print(f"✅ OpenSora video already saved to: {os.path.abspath(config.output_path)}")
-            save_result = {
-                'success': True,
-                'path': config.output_path,
-                'num_frames': video_frames.get('frames_count', num_frames),
-                'fps': config.fps,
-                'method': 'opensora_direct'
-            }
-        else:
-            # Standard diffusers output - needs saving
-            print(f"💾 Saving video to: {os.path.abspath(config.output_path)}")
-            save_result = save_video_output(video_frames, config.output_path, config.fps)
-            
-            if not save_result['success']:
-                raise RuntimeError(f"Failed to save video: {save_result.get('error', 'Unknown error')}")
-        
-        # Verify file was actually created
-        if not os.path.exists(config.output_path):
-            raise RuntimeError(f"Video file was not created at {config.output_path}")
-        
-        file_size_mb = get_file_size_mb(config.output_path)
-        abs_path = os.path.abspath(config.output_path)
-        
-        print(f"✅ Video saved successfully!")
-        print(f"   📁 Location: {abs_path}")
-        print(f"   📊 Size: {file_size_mb:.1f} MB")
-        print(f"   🎬 Frames: {save_result.get('num_frames', num_frames)}")
-        print(f"   ⏱️  Duration: {num_frames/config.fps:.1f} seconds")
+        # Save video
+        save_result = save_video_output(video_frames, config.output_path, config.fps)
         
         if progress_callback:
             progress_callback(10, 10)
@@ -182,14 +125,13 @@ def generate_video(
         
         return {
             'success': True,
-            'output_path': abs_path,
+            'output_path': config.output_path,
             'generation_time': generation_time,
-            'num_frames': save_result.get('num_frames', num_frames),
+            'num_frames': num_frames,
             'resolution': f"{config.resolution}x{config.resolution}",
             'fps': config.fps,
-            'file_size_mb': file_size_mb,
+            'file_size_mb': get_file_size_mb(config.output_path),
             'model_used': config.model_name,
-            'save_result': save_result,
         }
         
     except Exception as e:
@@ -282,7 +224,7 @@ def save_video_output(
     output_path: str,
     fps: int = 24
 ) -> Dict[str, Any]:
-    """Save video frames as video file with robust error handling.
+    """Save video frames as video file.
     
     Args:
         video_frames: Video frames from model output
@@ -293,112 +235,74 @@ def save_video_output(
         Save operation result
     """
     try:
-        # Ensure output directory exists
-        output_dir = os.path.dirname(output_path)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-            print(f"📁 Created directory: {output_dir}")
-        
-        # Try using diffusers export_to_video first (recommended for quality)
+        # Try using diffusers export_to_video first (recommended)
         try:
             from diffusers.utils import export_to_video
-            print("🎬 Using diffusers export_to_video for optimal quality...")
-            
             export_to_video(video_frames, output_path, fps=fps)
             
-            # Verify file was created
-            if os.path.exists(output_path):
-                return {
-                    'success': True,
-                    'path': output_path,
-                    'num_frames': len(video_frames) if hasattr(video_frames, '__len__') else 'unknown',
-                    'fps': fps,
-                    'method': 'diffusers_export'
-                }
+            return {
+                'success': True,
+                'path': output_path,
+                'num_frames': len(video_frames) if hasattr(video_frames, '__len__') else 'unknown',
+                'fps': fps
+            }
         except ImportError:
-            print("⚠️  diffusers.utils.export_to_video not available, using manual saving...")
-        except Exception as e:
-            print(f"⚠️  diffusers export failed: {e}, trying manual saving...")
+            # Fallback to manual saving
+            pass
         
-        # Manual saving using imageio with high quality settings
+        # Manual saving using imageio
         import imageio
-        print("🎬 Using imageio for video encoding...")
         
         # Handle different output formats
         if hasattr(video_frames, 'frames'):
             # Diffusers format
             frames = video_frames.frames[0]  # First video in batch
-            print(f"   📋 Detected diffusers format: {len(frames)} frames")
         elif isinstance(video_frames, dict) and 'frames' in video_frames:
             # Dictionary format
             frames = video_frames['frames']
-            print(f"   📋 Detected dictionary format: {len(frames)} frames")
         elif isinstance(video_frames, (list, tuple)):
             # List of frames
             frames = video_frames
-            print(f"   📋 Detected list format: {len(frames)} frames")
         else:
             # Tensor format
             frames = video_frames
-            print(f"   📋 Detected tensor format: {frames.shape if hasattr(frames, 'shape') else 'unknown shape'}")
         
         # Convert PIL Images to numpy arrays if needed
-        if len(frames) > 0 and hasattr(frames[0], 'convert'):  # PIL Images
-            print("   🔄 Converting PIL Images to numpy arrays...")
+        if hasattr(frames[0], 'convert'):  # PIL Images
             frames = [np.array(frame.convert('RGB')) for frame in frames]
             frames = np.array(frames)
         elif torch.is_tensor(frames):
-            print("   🔄 Converting tensor to numpy array...")
             frames = frames.cpu().numpy()
         
         # Normalize to 0-255 range if needed
         if frames.max() <= 1.0:
-            print("   🔄 Normalizing to 0-255 range...")
             frames = (frames * 255).astype(np.uint8)
         
         # Ensure correct shape: (T, H, W, C)
         if frames.ndim == 4 and frames.shape[-1] != 3:
-            print("   🔄 Transposing from (T, C, H, W) to (T, H, W, C)...")
+            # (T, C, H, W) -> (T, H, W, C)
             frames = frames.transpose(0, 2, 3, 1)
         
-        print(f"   📐 Final frame shape: {frames.shape}")
-        print(f"   🎯 Saving {len(frames)} frames at {fps} FPS...")
-        
-        # Save video with high quality settings
+        # Save video
         imageio.mimsave(
             output_path,
             frames,
             fps=fps,
             codec='libx264',
-            quality=9,  # Higher quality (0-10 scale)
-            pixelformat='yuv420p',  # Compatible pixel format
-            ffmpeg_params=['-crf', '18']  # High quality constant rate factor
+            quality=8
         )
-        
-        # Verify file was created and has reasonable size
-        if not os.path.exists(output_path):
-            raise RuntimeError(f"Video file was not created at {output_path}")
-        
-        file_size = os.path.getsize(output_path)
-        if file_size < 1000:  # Less than 1KB is probably an error
-            raise RuntimeError(f"Video file is too small ({file_size} bytes), generation may have failed")
         
         return {
             'success': True,
             'path': output_path,
             'num_frames': len(frames),
-            'fps': fps,
-            'method': 'imageio',
-            'file_size_bytes': file_size
+            'fps': fps
         }
         
     except Exception as e:
-        error_msg = f"Failed to save video: {str(e)}"
-        print(f"❌ {error_msg}")
         return {
             'success': False,
-            'error': error_msg,
-            'path': output_path
+            'error': f"Failed to save video: {str(e)}"
         }
 
 
