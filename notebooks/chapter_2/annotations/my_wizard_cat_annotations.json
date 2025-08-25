@@ -1,0 +1,26 @@
+[
+  {
+    "frame_id": 40,
+    "bbox": [100, 60, 180, 140],
+    "action": "jump",
+    "confidence": 0.95
+  },
+  {
+    "frame_id": 42,
+    "bbox": [120, 80, 200, 160],
+    "action": "jump",
+    "confidence": 0.92
+  },
+  {
+    "frame_id": 100,
+    "bbox": [150, 90, 220, 170],
+    "action": "jump",
+    "confidence": 0.87
+  },
+  {
+    "frame_id": 200,
+    "bbox": [50, 50, 120, 130],
+    "action": "sit",
+    "confidence": 0.98
+  }
+]
